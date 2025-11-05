@@ -11,6 +11,27 @@ logger = logging.getLogger(__file__)
 
 
 def get_product_list(page, campaign_id, access_token):
+    """Получает список товаров из Яндекс Маркета.
+
+    Args:
+        page (str): Номер страницы.
+        campaign_id (str): ID кампании магазина.
+        access_token (str): Токен доступа партнёра.
+
+    Returns:
+        dict: Словарь с результатами, который вернул API Яндекса.
+
+    Пример:
+        >>> data = get_product_list("", "123", "token")
+        >>> isinstance(data, dict)
+        True
+
+    Некорректный пример:
+        >>> get_product_list(None, "", "")
+        Traceback (most recent call last):
+        ...
+        requests.exceptions.HTTPError
+    """
     endpoint_url = "https://api.partner.market.yandex.ru/"
     headers = {
         "Content-Type": "application/json",
@@ -30,6 +51,26 @@ def get_product_list(page, campaign_id, access_token):
 
 
 def update_stocks(stocks, campaign_id, access_token):
+    """Отправляет остатки товаров в Яндекс Маркет.
+
+    Args:
+        stocks (list): Список остатков в формате API Яндекса.
+        campaign_id (str): ID кампании магазина.
+        access_token (str): Токен доступа партнёра.
+
+    Returns:
+        dict: Ответ API Яндекса.
+
+    Пример:
+        >>> update_stocks([{"sku": "123", "items": [{"count": 5}]}], "123", "token")
+        {'result': ...}
+
+    Некорректный пример:
+        >>> update_stocks([], "123", "token")
+        Traceback (most recent call last):
+        ...
+        requests.exceptions.HTTPError
+    """
     endpoint_url = "https://api.partner.market.yandex.ru/"
     headers = {
         "Content-Type": "application/json",
@@ -46,6 +87,26 @@ def update_stocks(stocks, campaign_id, access_token):
 
 
 def update_price(prices, campaign_id, access_token):
+    """Отправляет новые цены в Яндекс Маркет.
+
+    Args:
+        prices (list): Список цен в формате API Яндекса.
+        campaign_id (str): ID кампании магазина.
+        access_token (str): Токен доступа партнёра.
+
+    Returns:
+        dict: Ответ API Яндекса.
+
+    Пример:
+        >>> update_price([{"id": "100", "price": {"value": 5000}}], "123", "token")
+        {'result': ...}
+
+    Некорректный пример:
+        >>> update_price([], "123", "token")
+        Traceback (most recent call last):
+        ...
+        requests.exceptions.HTTPError
+    """
     endpoint_url = "https://api.partner.market.yandex.ru/"
     headers = {
         "Content-Type": "application/json",
@@ -62,7 +123,26 @@ def update_price(prices, campaign_id, access_token):
 
 
 def get_offer_ids(campaign_id, market_token):
-    """Получить артикулы товаров Яндекс маркета"""
+    """Получить артикулы товаров Яндекс маркета
+
+    Args:
+        campaign_id (str): ID кампании магазина.
+        market_token (str): Токен доступа партнёра.
+
+    Returns:
+        list: Список артикулов товаров.
+
+    Пример:
+        >>> ids = get_offer_ids("123", "token")
+        >>> isinstance(ids, list)
+        True
+
+    Некорректный пример:
+        >>> get_offer_ids("", "")
+        Traceback (most recent call last):
+        ...
+        requests.exceptions.HTTPError
+    """
     page = ""
     product_list = []
     while True:
@@ -78,6 +158,24 @@ def get_offer_ids(campaign_id, market_token):
 
 
 def create_stocks(watch_remnants, offer_ids, warehouse_id):
+    """Создаёт список остатков для Яндекс Маркета.
+
+    Args:
+        watch_remnants (list): Список остатков Casio.
+        offer_ids (list): Артикулы товаров из Маркета.
+        warehouse_id (str): ID склада.
+
+    Returns:
+        list: Список остатков для отправки в API.
+
+    Пример:
+        >>> create_stocks([{"Код": "100", "Количество": "5"}], ["100"], "wh1")
+        [{'sku': '100', 'warehouseId': 'wh1', 'items': [{'count': 5, 'type': 'FIT', ...}]}]
+
+    Некорректный пример:
+        >>> create_stocks([], ["100"], "wh1")
+        [{'sku': '100', 'warehouseId': 'wh1', 'items': [{'count': 0, ...}]}]
+    """
     # Уберем то, что не загружено в market
     stocks = list()
     date = str(datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z")
@@ -123,6 +221,23 @@ def create_stocks(watch_remnants, offer_ids, warehouse_id):
 
 
 def create_prices(watch_remnants, offer_ids):
+    """Создаёт список цен для отправки в Яндекс Маркет.
+
+    Args:
+        watch_remnants (list): Товары Casio.
+        offer_ids (list): Артикулы товаров из Маркета.
+
+    Returns:
+        list: Список цен для обновления.
+
+    Пример:
+        >>> create_prices([{"Код": "100", "Цена": "5 000 руб."}], ["100"])
+        [{'id': '100', 'price': {'value': 5000, 'currencyId': 'RUR'}}]
+
+    Некорректный пример:
+        >>> create_prices([], ["100"])
+        []
+    """
     prices = []
     for watch in watch_remnants:
         if str(watch.get("Код")) in offer_ids:
@@ -143,6 +258,23 @@ def create_prices(watch_remnants, offer_ids):
 
 
 async def upload_prices(watch_remnants, campaign_id, market_token):
+    """Обновляет цены товаров на Яндекс Маркете.
+
+    Args:
+        watch_remnants (list): Товары Casio.
+        campaign_id (str): ID кампании.
+        market_token (str): Токен доступа партнёра.
+
+    Returns:
+        list: Список отправленных цен.
+
+    Пример:
+        >>> # await upload_prices([...], "123", "token")
+
+    Некорректный пример:
+        >>> await upload_prices([], "123", "token")
+        []
+    """
     offer_ids = get_offer_ids(campaign_id, market_token)
     prices = create_prices(watch_remnants, offer_ids)
     for some_prices in list(divide(prices, 500)):
@@ -151,6 +283,24 @@ async def upload_prices(watch_remnants, campaign_id, market_token):
 
 
 async def upload_stocks(watch_remnants, campaign_id, market_token, warehouse_id):
+    """Обновляет остатки товаров на Яндекс Маркете.
+
+    Args:
+        watch_remnants (list): Остатки Casio.
+        campaign_id (str): ID кампании магазина.
+        market_token (str): Токен доступа.
+        warehouse_id (str): ID склада.
+
+    Returns:
+        tuple: (товары с ненулевыми остатками, все товары)
+
+    Пример:
+        >>> # await upload_stocks([...], "123", "token", "wh1")
+
+    Некорректный пример:
+        >>> await upload_stocks([], "123", "token", "wh1")
+        ([], [])
+    """
     offer_ids = get_offer_ids(campaign_id, market_token)
     stocks = create_stocks(watch_remnants, offer_ids, warehouse_id)
     for some_stock in list(divide(stocks, 2000)):
